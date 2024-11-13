@@ -3,12 +3,18 @@
 # 提示用户输入 API Token 和域名
 echo "请输入你的 API Token:"
 read API_TOKEN
+echo "API Token 已输入，按回车继续。"
+read -p "按回车继续..."
 
 echo "请输入用于获取 Zone ID 的域名 (例如 google.com):"
 read ZONE_DOMAIN
+echo "Zone 域名已输入，按回车继续。"
+read -p "按回车继续..."
 
 echo "请输入用于更新 DNS 记录的子域名 (例如 mail.google.com):"
 read DNS_DOMAIN
+echo "DNS 子域名已输入，按回车继续。"
+read -p "按回车继续..."
 
 # 获取 Zone ID
 echo "正在获取 Zone ID..."
@@ -49,4 +55,15 @@ if [ "$CURRENT_IP" == "$CF_IP" ]; then
 else
     # 更新 DNS 记录
     echo "正在更新 DNS 记录..."
-    RESPONSE=$(curl -s -
+    RESPONSE=$(curl -s -X PUT "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records/$RECORD_ID" \
+        -H "Authorization: Bearer $API_TOKEN" \
+        -H "Content-Type: application/json" \
+        --data '{"type":"A","name":"'"$DNS_DOMAIN"'","content":"'"$CURRENT_IP"'","ttl":1,"proxied":false}')
+
+    # 检查更新是否成功
+    if echo "$RESPONSE" | grep -q '"success":true'; then
+        echo "DNS 记录已成功更新为: $CURRENT_IP"
+    else
+        echo "更新失败：$RESPONSE"
+    fi
+fi
